@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proco Label Generator</title>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .form-section {
+            flex: 1;
+            min-width: 400px;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .form-section h2 {
+            margin-bottom: 20px;
+            font-family: Arial, sans-serif;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 14px;
+            font-family: Arial, sans-serif;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: Arial, sans-serif;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 24px;
+            background-color: #0078d4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-family: Arial, sans-serif;
+        }
+
+        button:hover {
+            background-color: #005a9e;
+        }
+
+        .label-preview {
+            flex: 0 0 auto;
+        }
+
+        /* Label styles */
+        .label {
+            width: 4in;
+            height: 6in;
+            background: white;
+            padding: 0.12in 0.15in;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            position: relative;
+            font-family: 'Arial Narrow', Arial, sans-serif;
+            font-size: 10pt;
+        }
+
+        .label-section {
+            border-bottom: 2px solid black;
+            margin-bottom: 0;
+            padding: 0.08in 0;
+        }
+
+        .label-section.no-border {
+            border: none;
+            padding: 0.05in 0;
+        }
+
+        .section-title {
+            font-size: 9pt;
+            font-weight: normal;
+            margin-bottom: 0.05in;
+        }
+
+        .field-label {
+            font-size: 8.5pt;
+            margin-bottom: 0.01in;
+            font-weight: normal;
+        }
+
+        .field-value {
+            font-size: 16pt;
+            font-weight: normal;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.02in;
+            transform: scaleY(1.1);
+        }
+
+        .barcode-container {
+            text-align: center;
+            margin: 0.02in 0;
+        }
+
+        .barcode-container svg {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .two-column {
+            display: flex;
+            gap: 0;
+        }
+
+        .two-column > div {
+            flex: 1;
+            padding: 0;
+        }
+
+        .two-column > div:first-child {
+            border-right: 2px solid black;
+        }
+
+        .two-column.split-30-70 > div:first-child {
+            flex: 0 0 34%;
+        }
+
+        .two-column.split-30-70 > div:last-child {
+            flex: 0 0 66%;
+        }
+
+        .two-column.split-45-55 > div:first-child {
+            flex: 0 0 70%;
+        }
+
+        .two-column.split-45-55 > div:last-child {
+            flex: 0 0 30%;
+        }
+
+        .two-column.split-50-50 > div:first-child {
+            flex: 0 0 50%;
+        }
+
+        .two-column.split-50-50 > div:last-child {
+            flex: 0 0 50%;
+        }
+
+        .serial-number {
+            position: absolute;
+            bottom: 0.1in;
+            right: 0.15in;
+            font-size: 10pt;
+            color: #333;
+        }
+
+        .handwritten-note {
+            color: #0066cc;
+            font-family: 'Brush Script MT', cursive;
+            font-weight: bold;
+            margin-top: 0.02in;
+            font-size: 11pt;
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                padding: 0;
+                background: white;
+            }
+
+            .container {
+                display: block;
+            }
+
+            .form-section {
+                display: none;
+            }
+
+            .label-preview {
+                display: block;
+            }
+
+            .label {
+                width: 4in;
+                height: 6in;
+                box-shadow: none;
+                page-break-after: always;
+                margin: 0;
+            }
+        }
+
+        @page {
+            size: 4in 6in;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form-section">
+            <h2>Proco Label Generator</h2>
+            <form id="labelForm">
+                <div class="form-group">
+                    <label for="brand">Brand:</label>
+                    <input type="text" id="brand" value="Xerox" required>
+                </div>
+                <div class="form-group">
+                    <label for="upc">UPC:</label>
+                    <input type="text" id="upc" value="">
+                </div>
+                <div class="form-group">
+                    <label for="customerPartNumber">Indirect Channel Customer Part Number (3OP):</label>
+                    <input type="text" id="customerPartNumber" value=" " required>
+                </div>
+                <div class="form-group">
+                    <label for="customerSN">Indirect Channel Customer SN (S):</label>
+                    <input type="text" id="customerSN" value="">
+                </div>
+                <div class="form-group">
+                    <label for="xeroxPartNumber" id="brandPartLabel">Xerox Part Number/Product Code/Model Code:</label>
+                    <input type="text" id="xeroxPartNumber" value=" " required>
+                </div>
+                <div class="form-group">
+                    <label for="grossWeight">Gross Weight:</label>
+                    <input type="text" id="grossWeight" value="X.XKgs / X.XLbs">
+                </div>
+                <div class="form-group">
+                    <label for="productDescription">Product Description:</label>
+                    <input type="text" id="productDescription" value=" ">
+                </div>
+                <div class="form-group">
+                    <label for="xeroxSN" id="brandSNLabel">Xerox SN:</label>
+                    <input type="text" id="xeroxSN" value="">
+                </div>
+                <div class="form-group">
+                    <label for="countryOfOrigin">Country of Origin:</label>
+                    <input type="text" id="countryOfOrigin" value="Made in China">
+                </div>
+                <div class="form-group">
+                    <label for="inventoryNumber" id="brandInventoryLabel">Inventory # (same as Xerox Part Number):</label>
+                    <input type="text" id="inventoryNumber" value=" ">
+                </div>
+                <div class="form-group">
+                    <label for="serialNumber">Serial Number (bottom right):</label>
+                    <input type="text" id="serialNumber" value=" ">
+                </div>
+                <div class="button-group">
+                    <button type="button" onclick="updateLabel()">Update Label</button>
+                    <button type="button" onclick="printLabel()">Print Label</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="label-preview">
+            <div class="label" id="label">
+                <!-- UPC Section -->
+                <div class="label-section no-border" style="border-bottom: 2px solid black; padding-bottom: 0.08in; margin-bottom: 0;">
+                    <div class="section-title">UPC</div>
+                    <div class="field-value" id="displayUPC" style="margin: 0; font-size: 16pt;"></div>
+                </div>
+
+                <!-- Customer Part Number Section -->
+                <div class="label-section" style="padding: 0.02in 0 0.05in 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div class="field-label" style="margin: 0; font-size: 10pt; margin-top: -0.03in; transform: scaleY(1.05);">Indirect Channel Customer Part Number (3OP):</div>
+                        <div class="field-value" id="displayCustomerPartNumber" style="margin: 0; font-size: 18pt;">108RO1036</div>
+                    </div>
+                    <div class="barcode-container" style="margin: 0.02in 0;">
+                        <svg id="barcodeCustomerPart"></svg>
+                    </div>
+                    <div style="border-bottom: 2px solid black; margin: 0.02in 0;"></div>
+                    <div class="field-label" style="margin-bottom: 0.01in; font-size: 10pt;">Indirect Channel Customer SN (S):</div>
+                    <div class="field-value" id="displayCustomerSN" style="min-height: 0.48in;"></div>
+                </div>
+
+                <!-- Xerox Part Number Section -->
+                <div class="label-section" style="padding: 0.02in 0 0.025in 0;">
+                    <div class="field-label" id="displayBrandPartLabel" style="font-size: 10pt;">Xerox Part Number/Product Code/Model Code</div>
+                    <div class="field-value" id="displayXeroxPartNumber" style="font-size: 18pt;">676K12652</div>
+                    <div class="barcode-container" style="margin: 0.02in 0;">
+                        <svg id="barcodeXeroxPart"></svg>
+                    </div>
+                </div>
+
+                <!-- Product Info Section -->
+                <div style="border-bottom: 2px solid black;">
+                    <div class="two-column split-30-70" style="min-height: 0.608in;">
+                        <div style="padding: 0.042in 0.08in; display: flex; flex-direction: column;">
+                            <div class="field-label">Gross Weight</div>
+                            <div style="flex-grow: 1; display: flex; align-items: center;">
+                                <div class="field-value" id="displayGrossWeight" style="font-size: 11pt; margin: 0;">0.5Kgs/1.1Lbs</div>
+                            </div>
+                        </div>
+                        <div style="padding: 0.042in 0.08in; display: flex; flex-direction: column;">
+                            <div class="field-label">Product Description</div>
+                            <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center;">
+                                <div style="text-align: center;">
+                                    <div class="field-value" id="displayProductDescription" style="font-size: 15pt; margin: 0;">IBT Cleaner Unit</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Xerox SN and Country Section -->
+                <div style="border-bottom: 2px solid black;">
+                    <div class="two-column split-45-55" style="min-height: 0.551in;">
+                        <div style="padding: 0.042in 0.08in;">
+                            <div class="field-label" id="displayBrandSNLabel">Xerox SN:</div>
+                            <div class="field-value" id="displayXeroxSN"></div>
+                        </div>
+                        <div style="padding: 0.042in 0.02in;">
+                            <div class="field-label">Country of Origin:</div>
+                            <div class="field-value" id="displayCountryOfOrigin" style="font-size: 14pt; letter-spacing: -0.5px; transform: scaleY(1.1);">Made in China</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Inventory Section -->
+                <div>
+                    <div class="two-column split-50-50" style="min-height: 0.551in;">
+                        <div style="padding: 0.042in 0.08in;">
+                            <div class="field-label">Inventory #</div>
+                            <div class="barcode-container" style="margin: 0.02in 0;">
+                                <svg id="barcodeInventory"></svg>
+                            </div>
+                        </div>
+                        <div style="padding: 0.042in 0.08in;">
+                            <!-- Empty column -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Serial Number -->
+                <div class="serial-number" id="displaySerialNumber">EC102030</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateLabel() {
+            // Get form values
+            const brandInput = document.getElementById('brand').value.trim();
+            const brand = brandInput || 'Xerox';
+            const upc = document.getElementById('upc').value;
+            const customerPartNumber = document.getElementById('customerPartNumber').value;
+            const customerSN = document.getElementById('customerSN').value;
+            const xeroxPartNumber = document.getElementById('xeroxPartNumber').value;
+            const grossWeight = document.getElementById('grossWeight').value;
+            const productDescription = document.getElementById('productDescription').value;
+            const xeroxSN = document.getElementById('xeroxSN').value;
+            const countryOfOrigin = document.getElementById('countryOfOrigin').value;
+            const inventoryNumber = document.getElementById('inventoryNumber').value;
+            const serialNumber = document.getElementById('serialNumber').value;
+
+            const brandPartLabelText = `${brand} Part Number/Product Code/Model Code`;
+            const brandSNLabelText = `${brand} SN`;
+
+            // Update brand-dependent labels
+            document.getElementById('brandPartLabel').textContent = `${brandPartLabelText}:`;
+            document.getElementById('displayBrandPartLabel').textContent = brandPartLabelText;
+            document.getElementById('brandSNLabel').textContent = `${brandSNLabelText}:`;
+            document.getElementById('displayBrandSNLabel').textContent = `${brandSNLabelText}:`;
+            document.getElementById('brandInventoryLabel').textContent = `Inventory # (same as ${brand} Part Number):`;
+
+            // Update display values
+            document.getElementById('displayUPC').textContent = upc;
+            document.getElementById('displayCustomerPartNumber').textContent = customerPartNumber;
+            document.getElementById('displayCustomerSN').textContent = customerSN;
+            document.getElementById('displayXeroxPartNumber').textContent = xeroxPartNumber;
+            document.getElementById('displayGrossWeight').textContent = grossWeight;
+            document.getElementById('displayProductDescription').textContent = productDescription;
+            document.getElementById('displayXeroxSN').textContent = xeroxSN;
+            document.getElementById('displayCountryOfOrigin').textContent = countryOfOrigin;
+            document.getElementById('displaySerialNumber').textContent = serialNumber;
+
+            // Generate barcodes
+            if (customerPartNumber) {
+                JsBarcode("#barcodeCustomerPart", "3OP" + customerPartNumber, {
+                    format: "CODE128",
+                    width: 1.8,
+                    height: 45,
+                    displayValue: true,
+                    fontSize: 9,
+                    margin: 0,
+                    marginTop: 2,
+                    marginBottom: 2
+                });
+            }
+
+            if (xeroxPartNumber) {
+                JsBarcode("#barcodeXeroxPart", xeroxPartNumber, {
+                    format: "CODE128",
+                    width: 1.8,
+                    height: 45,
+                    displayValue: true,
+                    fontSize: 9,
+                    margin: 0,
+                    marginTop: 2,
+                    marginBottom: 2
+                });
+            }
+
+            if (inventoryNumber) {
+                JsBarcode("#barcodeInventory", inventoryNumber, {
+                    format: "CODE128",
+                    width: 1.8,
+                    height: 45,
+                    displayValue: true,
+                    fontSize: 9,
+                    margin: 0,
+                    marginTop: 2,
+                    marginBottom: 2
+                });
+            }
+        }
+
+        function printLabel() {
+            window.print();
+        }
+
+        // Initialize label on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            updateLabel();
+        });
+    </script>
+</body>
+</html>
